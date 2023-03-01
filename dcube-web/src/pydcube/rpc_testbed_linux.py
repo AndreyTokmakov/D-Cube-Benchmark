@@ -31,6 +31,29 @@ from zipfile import ZipFile, ZIP_DEFLATED
 MASTER_PID = os.getpid()
 
 
+def init_logger() -> logging.Logger:
+    default_log_file_path: str = '/tmp/trace.log'
+    logging_format: str = "%(asctime)s %(name)16s [%(levelname)-8s] %(message)s"
+
+    logging.basicConfig(level=logging.DEBUG,
+                        format=logging_format)
+
+    logging.getLogger("pika").setLevel(logging.DEBUG)
+    logging.getLogger("urllib3").setLevel(logging.DEBUG)
+
+    file_handler: logging.Handler = logging.FileHandler(default_log_file_path)
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(logging.Formatter(logging_format))
+
+    log: logging.Logger = logging.getLogger("RPC_TESTBED_LINUX")
+    log.addHandler(file_handler)
+
+    return log
+
+
+logger = init_logger()
+
+
 def signal_handler(signum, frame):
     if os.getpid() == MASTER_PID:
         logger.error("Signal %s caught, terminating experiment!" % signum)
@@ -91,21 +114,6 @@ def print_motes(motes):
 
 
 JOB = args.job_id
-
-DEFAULT_LOG_FILE_PATH: str = '/tmp/trace.log'
-FORMAT = "%(asctime)s %(name)16s [%(levelname)-8s] %(message)s"
-
-file_handler: logging.Handler = logging.FileHandler(DEFAULT_LOG_FILE_PATH)
-file_handler.setLevel(logging.DEBUG)
-file_handler.setFormatter(logging.Formatter(FORMAT))
-
-logger = logging.getLogger(__name__)
-
-logging.getLogger("pika").setLevel(logging.DEBUG)
-logging.getLogger("urllib3").setLevel(logging.DEBUG)
-
-logger.addHandler(file_handler)
-
 
 ################################################################################
 # TODO implement PoE reboot logic

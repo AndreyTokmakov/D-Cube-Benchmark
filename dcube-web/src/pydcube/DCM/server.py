@@ -443,6 +443,25 @@ class Server:
         self.channel.start_consuming()
         self.logger.info("Stopped")
 
+    def init_logger(self) -> logging.Logger:
+        default_log_file_path: str = '/tmp/trace.log'
+        logging_format: str = "%(asctime)s %(name)16s [%(levelname)-8s] %(message)s"
+
+        logging.basicConfig(level=logging.DEBUG,
+                            format=logging_format)
+
+        logging.getLogger("pika").setLevel(logging.DEBUG)
+        logging.getLogger("urllib3").setLevel(logging.DEBUG)
+
+        file_handler: logging.Handler = logging.FileHandler(default_log_file_path)
+        file_handler.setLevel(logging.DEBUG)
+        file_handler.setFormatter(logging.Formatter(logging_format))
+
+        log: logging.Logger = logging.getLogger("D-Cube Server")
+        log.addHandler(file_handler)
+
+        return log
+
     ################################################################################
     # Constructor
     ################################################################################
@@ -451,7 +470,7 @@ class Server:
         self.JAMMING_PWD = "/home/pi/testbed/"
         self.JAMMING_CMD = "./jammer"
 
-        self.logger = logging.getLogger("D-Cube Server")
+        self.logger = self.init_logger()
         self.logger.info("D-Cube Server:")
         self.tempdir = tempdir
         self.hostname = hostname

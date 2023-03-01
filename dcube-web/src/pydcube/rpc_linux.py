@@ -9,7 +9,26 @@ import argparse
 import signal
 import socket
 
-logger = logging.getLogger(__name__)
+
+def init_logger() -> logging.Logger:
+    default_log_file_path: str = '/tmp/trace.log'
+    logging_format: str = "%(asctime)s %(name)16s [%(levelname)-8s] %(message)s"
+
+    logging.basicConfig(level=logging.DEBUG,
+                        format=logging_format)
+    logging.getLogger("pika").setLevel(logging.DEBUG)
+
+    file_handler: logging.Handler = logging.FileHandler(default_log_file_path)
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(logging.Formatter(logging_format))
+
+    log: logging.Logger = logging.getLogger("RPC_LINUX")
+    log.addHandler(file_handler)
+
+    return log
+
+
+logger = init_logger()
 
 
 def get_hostname():
@@ -30,18 +49,6 @@ parser.add_argument("--hostname", type=str, default=get_hostname(), help="Overri
 parser.add_argument("--debug", action="store_true", help="Enable debug")
 
 args = parser.parse_args()
-
-
-DEFAULT_LOG_FILE_PATH: str = '/tmp/trace.log'
-FORMAT = "%(asctime)s %(name)16s [%(levelname)-8s] %(message)s"
-
-logging.basicConfig(level=logging.DEBUG, format=FORMAT)
-logging.getLogger("pika").setLevel(logging.WARNING)
-
-file_handler: logging.Handler = logging.FileHandler(DEFAULT_LOG_FILE_PATH)
-file_handler.setLevel(logging.DEBUG)
-file_handler.setFormatter(logging.Formatter(FORMAT))
-
 
 if args.credentials is None:
     user_name = "guest"
