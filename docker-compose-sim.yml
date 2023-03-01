@@ -65,14 +65,20 @@ services:
                 hostname: rabbitmq
                 restart: always 
                 container_name: rabbitmq
-                image: rabbitmq:management
+                # image: rabbitmq:management
+                image: rabbitmq:3-management
                 security_opt:
                         - seccomp:unconfined
                 ports:
+                        # AMQP protocol port
                         - 5672:5672
+                        # HTTP management UI
+                        - 15672:15672
+
                 environment:
                         - RABBITMQ_DEFAULT_USER=dcube
                         - RABBITMQ_DEFAULT_PASS=GWcq43x2
+
                 volumes:
                         - ./storage/rabbitmq:/var/lib/rabbitmq
 
