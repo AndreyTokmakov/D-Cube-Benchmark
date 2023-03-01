@@ -131,7 +131,7 @@ def next_job(with_jam=False, with_bs=False):
     global current_benchmark_suite
 
     prio = Job.query.filter_by(finished=False).filter_by(priority=True).order_by(Job.scheduled.asc()).first()
-    if not prio == None:
+    if prio:
         logger.debug("HIGH PRIORITY!")
         return prio
     groups = Group.query
@@ -144,13 +144,13 @@ def next_job(with_jam=False, with_bs=False):
         has_next = False
 
         for benchmark_suite in benchmark_suites:
-            if (current_benchmark_suite == None):
+            if current_benchmark_suite == None:
                 current_benchmark_suite = nc.id
                 break
             else:
-                if (current_benchmark_suite == benchmark_suite.id):
+                if current_benchmark_suite == benchmark_suite.id:
                     armed = True
-                elif (armed == True):
+                elif armed == True:
                     nc = benchmark_suite
                     has_next = True
                     armed = False
@@ -164,29 +164,29 @@ def next_job(with_jam=False, with_bs=False):
 
         if not (armed == True):
             candidate_q = Job.query.filter_by(finished=False).filter_by(group_id=current_group)
-            if (with_jam == False):
+            if with_jam == False:
                 candidate_q = candidate_q.filter_by(jamming_composition_id=1)
             candidate = candidate_q.join(LayoutComposition).join(BenchmarkSuite).filter(
                 BenchmarkSuite.id == nc.id).order_by(Job.scheduled.asc()).first()
-            if not (candidate == None):
+            if candidate:
                 return candidate
 
     armed = False
     for group in groups:
-        if (current_group == None):
+        if current_group == None:
             current_group = ng.id
             break
         else:
-            if (current_group == group.id):
+            if current_group == group.id:
                 armed = True
-            elif (armed == True):
+            elif armed == True:
                 ng = group
                 break
     current_group = ng.id
 
     job_q = Job.query.filter_by(finished=False).filter_by(group_id=current_group)
 
-    if (with_jam == False):
+    if False == with_jam:
         job_q = job_q.filter_by(jamming_composition_id=1)
 
     # job_q=job_q.order_by(Job.scheduled.asc(),BenchmarkSuite.id.asc(),Job.scheduled.asc())
@@ -194,7 +194,7 @@ def next_job(with_jam=False, with_bs=False):
     # job_q=job_q.filter(BenchmarkSuite.node.has(Node.name!="Sky-All"))
 
     job = job_q.first()
-    if job == None:
+    if job is None:
         current_benchmark_suite = None
     else:
         current_benchmark_suite = job.protocol.benchmark_suite.id
@@ -211,9 +211,8 @@ def check_kill():
     global last_check
     db.session.commit()
     panic = Config.query.filter_by(key="scheduler_stop").first()
-    if not panic == None:
-        if panic.value == "on":
-            return True
+    if panic and panic.value == "on":
+        return True
     return False
 
 
@@ -303,10 +302,10 @@ def check_weekend():
 
 
 def check_fulltime(job):
-    if job == None:
+    if job is None:
         return False
     group = job.group
-    if group == None:
+    if group is None:
         return False
     for user in group.users:
         if user.has_role("fulltime"):
@@ -336,13 +335,13 @@ class Scheduler:
                     sleep(1)
                     continue
                 else:
-                    if next.firmware == None:
+                    if next.firmware is None:
                         logger.debug("no firmware found yet")
                         continue
                     logger.debug("running %s for group %s" % (next.firmware.filename, next.group.name))
                     next.running = True
                     oldres = next.result
-                    if not oldres == None:
+                    if oldres:
                         db.session.delete(oldres)
                     log = Log(next.id)
                     db.session.add(log)
@@ -350,7 +349,7 @@ class Scheduler:
                     name = next.firmware.filename
                     start_time = datetime.utcnow()
 
-                    if ("E2E" in next.protocol.benchmark_suite.name):
+                    if "E2E" in next.protocol.benchmark_suite.name:
                         logger.debug("requesting")
                         e2e_req = request_e2e_slot(next)
                         r = requests.post(E2E_URL + "/request", json=e2e_req)
@@ -363,8 +362,8 @@ class Scheduler:
                         c["token"] = E2E_TOKEN
 
                         logger.debug("checking")
-                        while (True):
-                            if check_kill() == True:
+                        while True:
+                            if check_kill():
                                 logger.debug("aborting")
                                 break
                             r = requests.get(E2E_URL + "/ready/%s" % E2E_TOKEN)
@@ -372,7 +371,7 @@ class Scheduler:
                                 logger.debug("api error (%d)!" % r.status_code)
                                 break
                             res = r.json()
-                            if res["state"] == False:
+                            if not res["state"]:
                                 logger.debug("not ready yet (%s)" % r.text)
                                 sleep(1)
                             else:
@@ -398,7 +397,7 @@ class Scheduler:
                             [py_path, dcm_bin, "--job_id", str(next.id), "--topology", switch_config, "--broker",
                              dcm_broker], stderr=PIPE, stdin=PIPE, stdout=PIPE, cwd=dcm_path)
 
-                    elif (next.protocol.benchmark_suite.node.name == "Linux-All"):
+                    elif next.protocol.benchmark_suite.node.name == "Linux-All":
                         py_path = current_app.config['PYTHON_PATH']
                         dcm_path = current_app.config['DCM_PATH']
                         dcm_bin = "rpc_testbed_linux.py"
@@ -416,7 +415,7 @@ class Scheduler:
                         next.finished = True
                         next.running = False
                         panic = Config.query.filter_by(key="scheduler_stop").first()
-                        if not panic == None:
+                        if panic:
                             if not panic.value == "on":
                                 panic.value = "on"
                         else:
@@ -478,7 +477,7 @@ class Scheduler:
                         next.failed = True
                         if not return_code == 253:  # -3 is file format error and ok
                             panic = Config.query.filter_by(key="scheduler_stop").first()
-                            if not panic == None:
+                            if panic:
                                 if not panic.value == "on":
                                     panic.value = "on"
                                     try:

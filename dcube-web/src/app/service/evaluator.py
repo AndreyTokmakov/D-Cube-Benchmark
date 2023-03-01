@@ -59,7 +59,7 @@ K_CAUS = 2.0
 
 
 def init_logger() -> logging.Logger:
-    default_log_file_path: str = '/tmp/scheduler.log'
+    default_log_file_path: str = '/tmp/evaluator.log'
     logging_format: str = "%(asctime)s %(name)16s [%(levelname)-8s] %(message)s"
 
     logging.basicConfig(level=logging.DEBUG,
@@ -70,7 +70,7 @@ def init_logger() -> logging.Logger:
     file_handler.setLevel(logging.DEBUG)
     file_handler.setFormatter(logging.Formatter(logging_format))
 
-    log: logging.Logger = logging.getLogger("Scheduler")
+    log: logging.Logger = logging.getLogger("Evaluator")
     log.addHandler(file_handler)
 
     return log
@@ -144,7 +144,7 @@ class Evaluator:
                     continue
 
                 # TODO: malli hack
-                if (job.group.id == 20 or job.group.id == 1):
+                if job.group.id == 20 or job.group.id == 1:
                     s.split_mp2p = True
 
                 try:
@@ -164,7 +164,7 @@ class Evaluator:
                     pair = ev["pair"]
                     evaluation = ev["evaluation"]
 
-                    if (len(pair["source"]) == 0 or len(pair["destination"]) == 0 or evaluation.count_source == 0):
+                    if len(pair["source"]) == 0 or len(pair["destination"]) == 0 or evaluation.count_source == 0:
                         logger.debug("No sources/destinations/events")
                         job.evaluated = True
                         db.session.commit()
@@ -188,7 +188,7 @@ class Evaluator:
                     energies.append(ev["energy_total"])
                     setup_energies.append(ev["energy_setup"])
 
-                    if (not (s.split_mp2p and evaluation.count_source == None)):
+                    if not (s.split_mp2p and evaluation.count_source == None):
                         esrc = evaluation.count_source
                         esnk = evaluation.count_destination
                         ecor = evaluation.source_destination
@@ -205,7 +205,7 @@ class Evaluator:
                         except ZeroDivisionError:
                             event_metric = None
 
-                        if not (event_metric >= 0 and event_metric <= 1):
+                        if not (0 <= event_metric <= 1):
                             event_metric = 0
 
                         reliabilities.append(float(event_metric))
@@ -222,7 +222,7 @@ class Evaluator:
                         eee = Evaluation("Correct messages", ecor, True, scenario.id)
                         db.session.add(eee)
 
-                        if (job.protocol.benchmark_suite.id == 3):
+                        if job.protocol.benchmark_suite.id == 3:
                             eee = Evaluation("Late (but correct) messages", elate, False, scenario.id)
                             db.session.add(eee)
 
@@ -250,7 +250,7 @@ class Evaluator:
                         latency_90 = float(np.percentile(evaluation.deltas, 90))
                         latency_95 = float(np.percentile(evaluation.deltas, 95))
                         latency_99 = float(np.percentile(evaluation.deltas, 99))
-                        if (not (s.split_mp2p and evaluation.count_source == None)):
+                        if not (s.split_mp2p and evaluation.count_source == None):
                             latencies.append(float((latency_mean + latency_median) / 2.0))
                     else:
                         latency_sum = None
@@ -261,10 +261,10 @@ class Evaluator:
                         latency_90 = None
                         latency_95 = None
                         latency_99 = None
-                        if (not (s.split_mp2p and evaluation.count_source == None)):
+                        if not (s.split_mp2p and evaluation.count_source == None):
                             latencies.append(None)
 
-                    if (latency_mean == None or latency_median == None):
+                    if latency_mean == None or latency_median == None:
                         el = Evaluation("Latency combined [us]", "None", True, scenario.id)
                     else:
                         el = Evaluation("Latency combined [us]", str(round(((latency_mean + latency_median) / 2), 2)),
