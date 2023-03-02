@@ -9,6 +9,8 @@ services:
                         dockerfile: Dockerfile-sim
                 depends_on:
                         - broker
+                volumes:
+                    - ./storage/tmp/rpi80/:/tmp
 
         rpi_81:
                 hostname: rpi81
@@ -19,6 +21,8 @@ services:
                         dockerfile: Dockerfile-sim
                 depends_on:
                         - broker
+                volumes:
+                    - ./storage/tmp/rpi81/:/tmp
 
 
         web:
@@ -35,6 +39,7 @@ services:
                         - 80:80
                 volumes: 
                         - ./storage/web:/storage
+                        - ./storage/tmp/dcube/:/tmp
 
         db:
                 hostname: mysql
