@@ -22,7 +22,7 @@
 # SOFTWARE.
 #
 from .server import Server
-from .command import CommandState,CommandReturn
+from .command import CommandState, CommandReturn
 
 import subprocess
 import os
@@ -32,64 +32,65 @@ import base64
 
 from zipfile import ZipFile
 
+
 class Linux(Server):
 
-################################################################################
-# Select node using the mux
-################################################################################
+    ################################################################################
+    # Select node using the mux
+    ################################################################################
 
-    def cmd_select_node(self,request,response):
-        ret=CommandReturn.FAILED
-        response["message"]="Linux nodes do not have motes!"
-        return ret
-    
-################################################################################
-# Command to control node power
-################################################################################
-
-    def cmd_power(self,request,response):
-        ret=CommandReturn.FAILED
-        response["message"]="Linux nodes do not support changing power!"
+    def cmd_select_node(self, request, response):
+        ret = CommandReturn.FAILED
+        response["message"] = "Linux nodes do not have motes!"
         return ret
 
-################################################################################
-# Command to control node reset
-################################################################################
+    ################################################################################
+    # Command to control node power
+    ################################################################################
 
-    def cmd_reset(self,request,response):
-        ret=CommandReturn.FAILED
-        response["message"]="Linux nodes do not support reset!"
+    def cmd_power(self, request, response):
+        ret = CommandReturn.FAILED
+        response["message"] = "Linux nodes do not support changing power!"
         return ret
 
-################################################################################
-# Command to program the node
-################################################################################
+    ################################################################################
+    # Command to control node reset
+    ################################################################################
 
-    def cmd_program(self,request,response):
+    def cmd_reset(self, request, response):
+        ret = CommandReturn.FAILED
+        response["message"] = "Linux nodes do not support reset!"
+        return ret
+
+    ################################################################################
+    # Command to program the node
+    ################################################################################
+
+    def cmd_program(self, request, response):
         self.logger.debug("Programming node...")
-        tempfile=os.path.join(self.tempdir,"temp.zip")
+        tempfile = os.path.join(self.tempdir, "temp.zip")
         if "zipfile" in request:
-            zipfile=base64.b64decode(request["zipfile"])
-            with open(tempfile,"wb") as f:
+            zipfile = base64.b64decode(request["zipfile"])
+            with open(tempfile, "wb") as f:
                 f.write(zipfile)
-        elif not self.experiment==None:
-            job_id=self.experiment.get_job_id()
-            job=self.rest.get_job(job_id)
-            if job==None:
-                response["message"]="Job does not exist"
+        elif self.experiment:
+            job_id = self.experiment.get_job_id()
+            job = self.rest.get_job(job_id)
+            if job is None:
+                response["message"] = "Job does not exist"
                 return CommandReturn.FAILED
 
-            zipfile=self.rest.get_firmware(job_id)
-            with open(tempfile,"wb") as f:
+            zipfile = self.rest.get_firmware(job_id)
+            with open(tempfile, "wb") as f:
                 f.write(zipfile)
 
             if ("patch" in job and job["patch"]) or \
-                ("cpatch" in job and job["cpatch"]):
-                response["message"]="Patching not supported yet!"
+                    ("cpatch" in job and job["cpatch"]):
+                response["message"] = "Patching not supported yet!"
                 self.logger.error(response["message"])
                 return CommandReturn.FAILED
 
-        workdir=os.path.join(self.tempdir,"work")
+        workdir = os.path.join(self.tempdir, "work")
         if os.path.exists(workdir):
             shutil.rmtree(workdir)
         os.mkdir(workdir)
@@ -98,81 +99,81 @@ class Linux(Server):
             with ZipFile(tempfile) as zf:
                 zf.extractall(path=workdir)
         except ValueError:
-            response["message"]="Not a zipfile!"
+            response["message"] = "Not a zipfile!"
             return CommandReturn.FORMAT
 
-        entrypoint=os.path.join(workdir,"entrypoint.sh")
+        entrypoint = os.path.join(workdir, "entrypoint.sh")
         if os.path.exists(entrypoint):
-            st=os.stat(entrypoint)
-            os.chmod(entrypoint,st.st_mode | stat.S_IEXEC )
+            st = os.stat(entrypoint)
+            os.chmod(entrypoint, st.st_mode | stat.S_IEXEC)
         else:
-            response["message"]="No entrypoint found!"
+            response["message"] = "No entrypoint found!"
             return CommandReturn.FORMAT
 
-        cmd = [entrypoint,]
+        cmd = [entrypoint, ]
 
         try:
-            #p=subprocess.Popen(cmd,cwd=workdir,preexec_fn=os.setsid)
-            #p=subprocess.Popen(cmd,cwd=workdir,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,preexec_fn=lambda: os.setpgid(os.getpid(), os.getpid()) )
-            p=subprocess.Popen(cmd,cwd=workdir,stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,start_new_session=True)
+            # p=subprocess.Popen(cmd,cwd=workdir,preexec_fn=os.setsid) p=subprocess.Popen(cmd,cwd=workdir,
+            # stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,preexec_fn=lambda: os.setpgid(os.getpid(),
+            # os.getpid()) )
+            p = subprocess.Popen(cmd, cwd=workdir, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+                                 start_new_session=True)
         except FileNotFoundError as e:
-           response["message"]="File does not exist!"
-           self.logger.error(response["message"])
-           return CommandReturn.FAILED
+            response["message"] = "File does not exist!"
+            self.logger.error(response["message"])
+            return CommandReturn.FAILED
 
-        self.experiment.processes[p.pid]=p
+        self.experiment.processes[p.pid] = p
         return CommandReturn.SUCCESS
 
-################################################################################
-# Collecting output from scripts
-################################################################################
+    ################################################################################
+    # Collecting output from scripts
+    ################################################################################
 
     def collect_traces(self):
-        workdir=os.path.join(self.tempdir,"work")
-        outdir=os.path.join(workdir,"output")
-        outfile=os.path.join(self.tempdir,"output.zip")
+        workdir = os.path.join(self.tempdir, "work")
+        outdir = os.path.join(workdir, "output")
+        outfile = os.path.join(self.tempdir, "output.zip")
 
         if os.path.exists(outfile):
             os.remove(outfile)
 
         if os.path.exists(outdir):
-            shutil.make_archive(os.path.splitext(outfile)[0],os.path.splitext(outfile)[1][1:],outdir)
+            shutil.make_archive(os.path.splitext(outfile)[0], os.path.splitext(outfile)[1][1:], outdir)
         else:
-            with ZipFile(outfile,"w") as zf:
+            with ZipFile(outfile, "w") as zf:
                 pass
 
-        with open(outfile,"rb") as f:
-            enc=base64.b64encode(f.read())
+        with open(outfile, "rb") as f:
+            enc = base64.b64encode(f.read())
             return enc.decode()
 
-
-    def cmd_trace(self,request,response):
-        ret=CommandReturn.SUCCESS
-        if "state" in  request:
-            if request["state"]==CommandState.ON:
+    def cmd_trace(self, request, response):
+        ret = CommandReturn.SUCCESS
+        if "state" in request:
+            if request["state"] == CommandState.ON:
                 self.logger.debug("Starting trace collection...")
-            if request["state"]==CommandState.OFF:
+            if request["state"] == CommandState.OFF:
                 self.logger.debug("Stopping trace collection...")
-                response["logs"]=self.collect_traces()
-                response["ext"]="zip"
+                response["logs"] = self.collect_traces()
+                response["ext"] = "zip"
         else:
             self.logger.error("No state given for trace collection!")
-            ret=CommandReturn.FAILED
+            ret = CommandReturn.FAILED
         return ret
 
+    ################################################################################
+    # Commands for the measurement service
+    ################################################################################
 
-################################################################################
-# Commands for the measurement service
-################################################################################
-
-    def cmd_measurement(self,request,response):
+    def cmd_measurement(self, request, response):
         if "state" in request:
-            if request["state"]==CommandState.ON:
-                self.measurement_started=True
-            elif request["state"]==CommandState.OFF:
-                self.measurement_started=False
+            if request["state"] == CommandState.ON:
+                self.measurement_started = True
+            elif request["state"] == CommandState.OFF:
+                self.measurement_started = False
 
-        response["message"]=self.get_measurement()
+        response["message"] = self.get_measurement()
         return CommandReturn.SUCCESS
 
     def get_measurement(self):
@@ -181,33 +182,38 @@ class Linux(Server):
         else:
             return CommandReturn.RUNNING
 
-################################################################################
-# Command list currnt nodes
-################################################################################
+    ################################################################################
+    # Command list currnt nodes
+    ################################################################################
 
     def motelist(self):
-        motes=[]
+        motes = []
         return motes
 
-################################################################################
-# Command to indicate the server to reboot
-################################################################################
+    ################################################################################
+    # Command to indicate the server to reboot
+    ################################################################################
 
-    def cmd_reboot(self,request,response):
-        ret=CommandReturn.FAILED
-        response["message"]="Linux nodes cannot be rebooted!"
+    def cmd_reboot(self, request, response):
+        ret = CommandReturn.FAILED
+        response["message"] = "Linux nodes cannot be rebooted!"
         return ret
 
-################################################################################
-# Command dispatcher
-################################################################################
+    ################################################################################
+    # Command dispatcher
+    ################################################################################
 
-    def __init__(self, host, hostname, user_name, user_pass, nodes=[], tempdir="/tmp", resturl="http://dcube-web"):
+    def __init__(self,
+                 host, hostname, user_name, user_pass, nodes=None,
+                 tempdir="/tmp", resturl="http://dcube-web"):
         super().__init__(host, hostname, user_name, user_pass, nodes, tempdir)
-        self.measurement_started=False
+        if nodes is None:
+            nodes = []
+        self.measurement_started = False
 
-        #change default values
-        self.JAMMING_PWD="/tmp"
-        self.JAMMING_CMD="true"
-
- 
+        # change default values
+        self.JAMMING_PWD = "/tmp"
+        self.JAMMING_CMD = "true"
+        self.logger.debug(f"Linux node created")
+        self.logger.debug(f"\thost: {host}, hostname: {hostname}, user_name: {user_name}, "
+                          f"user_pass:  {user_pass}, nodes: {nodes}")

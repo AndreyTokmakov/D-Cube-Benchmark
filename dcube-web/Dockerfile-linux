@@ -1,4 +1,10 @@
-FROM python:alpine
+# FROM python:alpine
+
+FROM  ubuntu:latest
+RUN apt-get update && apt-get upgrade -y
+RUN apt-get install python3 python3-pip net-tools nano tcpdump -y
+
+
 RUN apk add --no-cache iperf3
 ADD ./src/pydcube /testbed
 WORKDIR /testbed
