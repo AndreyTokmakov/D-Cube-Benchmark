@@ -11,7 +11,7 @@ import socket
 
 
 def init_logger() -> logging.Logger:
-    default_log_file_path: str = '/tmp/trace.log'
+    default_log_file_path: str = '/tmp/rpc_linux_trace.log'
     logging_format: str = "%(asctime)s %(name)16s [%(levelname)-8s] %(message)s"
 
     logging.basicConfig(level=logging.DEBUG,

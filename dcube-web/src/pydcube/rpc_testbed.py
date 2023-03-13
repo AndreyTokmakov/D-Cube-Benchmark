@@ -81,8 +81,8 @@ def init_logger() -> logging.Logger:
 logger = init_logger()
 
 
-def signalhandler(signum, frame):
-    if (os.getpid() == MASTER_PID):
+def signal_handler(signum, frame):
+    if os.getpid() == MASTER_PID:
         logger.error("Signal %s caught, terminating experiment!" % signum)
         stop = datetime.datetime.now()
         stop = stop.replace(tzinfo=pytz.utc)
@@ -91,7 +91,7 @@ def signalhandler(signum, frame):
             if (start):
                 runtime = stop - start
                 logger.info("Experiment terminated on %s after %s seconds." % (
-                stop.strftime(DATEFORMAT), int(runtime.total_seconds())))
+                    stop.strftime(DATEFORMAT), int(runtime.total_seconds())))
         except NameError:
             logger.info("Experiment terminated on %s." % stop.strftime(DATEFORMAT))
             pass
@@ -99,7 +99,7 @@ def signalhandler(signum, frame):
         exit(-2)
 
     try:
-        if (templab):
+        if templab:
             templab.stop()
             exit(0)
     except NameError:
@@ -140,7 +140,7 @@ def print_job(job):
     logger.info("Experiment duration: %d" % job["duration"])
     logger.info("Serial log: %s" % ("enabled" if job["logs"] else "disabled"))
     logger.info("Jamming: %s" % job["jamming_short"])
-    if (job["templab"] == True):
+    if job["templab"]:
         logger.info("Templab extension: %s" % ("enabled" if job["templab"] else "disabled"))
 
 
@@ -152,9 +152,8 @@ def print_motes(motes):
 
 JOB = args.job_id
 
-
 ################################################################################
-# TODO implment PoE reboot logic
+# TODO implement PoE reboot logic
 ################################################################################
 if args.topology_json:
     with open(args.topology_json, "r") as f:
@@ -188,8 +187,8 @@ job = rest.get_job(JOB)
 print_job(job)
 logger.info("=" * len(banner))
 
-signal.signal(signal.SIGINT, signalhandler)
-signal.signal(signal.SIGTERM, signalhandler)
+signal.signal(signal.SIGINT, signal_handler)
+signal.signal(signal.SIGTERM, signal_handler)
 
 if job["templab"]:
     # TODO use credentials file!
@@ -235,7 +234,7 @@ while count < POE_RETRY_MAX:
 
         # loop until all nodes are pingable, up to PING_MAX times with PING_DELAY interval
         loopy = True
-        while (loopy):
+        while loopy:
             if ping_counter >= PING_MAX:
                 logger.error("Reboot of servers %s failed" % dcube.get_unresponsive())
                 exit(-1)
@@ -250,7 +249,7 @@ while count < POE_RETRY_MAX:
                 if ping_counter == round(PING_MAX / 2):
                     power_cycle(e.servers)
                 loopy = True
-        if loopy == False:
+        if not loopy:
             break
         else:
             count += 1
@@ -275,7 +274,7 @@ log_stage = False
 dcube.experiment(state=DCM.CommandState.ON, job_id=JOB, servers=COPY)
 
 # redo PROGRAM_RETRY_MAX times or until no more failed or missing nodes are found
-while ((not len(COPY) == 0) and count < PROGRAM_RETRY_MAX):
+while (not len(COPY) == 0) and count < PROGRAM_RETRY_MAX:
     logger.debug("\t%s" % COPY)
 
     # start a new experiment, if programming failes nodes will already have one (ignore)
@@ -361,7 +360,7 @@ while ((not len(COPY) == 0) and count < PROGRAM_RETRY_MAX):
         # sleep until clock should be in sync again after reboot
         dcube.sleep(60)
 
-    if ((not len(r["missing"]) == 0) or (not len(r["failed"]) == 0)):
+    if (not len(r["missing"]) == 0) or (not len(r["failed"]) == 0):
         logger.debug("Some nodes have failed programming, retrying...")
 
     # in the next iteration, only the failed and newly rebooted missing nodes will be used
@@ -398,7 +397,7 @@ while ((not len(COPY) == 0) and count < PROGRAM_RETRY_MAX):
     if job["node"] == "Nordic-All":
         brs = rest.get_border_routers(JOB)
 
-        if (len(brs)):
+        if len(brs):
             LIST_BRS = list()
             for br in brs:
                 LIST_BRS.append("rpi%s" % br)
@@ -416,11 +415,11 @@ while ((not len(COPY) == 0) and count < PROGRAM_RETRY_MAX):
     dcube.blinker(servers=COPY)
 
     # if logs are enabled, start traces
-    if (job["logs"] == True):
+    if job["logs"]:
 
         LOG_COPY = list(COPY)
         brs = rest.get_border_routers(JOB)
-        if (len(brs)):
+        if len(brs):
             for br in brs:
                 if br in LOG_COPY:
                     LOG_COPY.remove(br)
@@ -541,11 +540,11 @@ if job["templab"]:
     templab.stop()
 
 # stopping the traces will automatically also collect the logs
-if (job["logs"] == True):
+if job["logs"]:
 
     LOG_COPY = list(SERVERS)
     brs = rest.get_border_routers(JOB)
-    if (len(brs)):
+    if len(brs):
         for br in brs:
             if br in LOG_COPY:
                 LOG_COPY.remove(br)
