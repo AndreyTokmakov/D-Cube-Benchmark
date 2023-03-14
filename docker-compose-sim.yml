@@ -10,7 +10,7 @@ services:
                 depends_on:
                         - broker
                 volumes:
-                    - ./storage/tmp/rpi80/:/tmp
+                         - ./storage/tmp/rpi80/:/tmp
 
         rpi_81:
                 hostname: rpi81
@@ -22,8 +22,7 @@ services:
                 depends_on:
                         - broker
                 volumes:
-                    - ./storage/tmp/rpi81/:/tmp
-
+                        - ./storage/tmp/rpi81/:/tmp
 
         web:
                 hostname: dcube-web
@@ -53,6 +52,9 @@ services:
                         - MYSQL_DATABASE=dcube
                         - MYSQL_USER=dcube
                         - MYSQL_PASSWORD=YzqmVQt9
+                ports:
+                        - 3306:3306/tcp
+                        - 33060:33060/tcp
 
         tsdb:
                 hostname: influx
