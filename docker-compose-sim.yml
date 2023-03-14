@@ -10,7 +10,7 @@ services:
                 depends_on:
                         - broker
                 volumes:
-                         - ./storage/tmp/rpi80/:/tmp
+                        - ./storage/tmp/rpi80/:/tmp
 
         rpi_81:
                 hostname: rpi81
@@ -103,4 +103,4 @@ services:
                         - GF_SERVER_SERVE_FROM_SUB_PATH=true
 
                 ports:
-                        - 0.0.0.0:80:3000
+                        - 0.0.0.0:3000:3000
