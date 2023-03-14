@@ -14,6 +14,7 @@ services:
                         - 80:80
                 volumes: 
                         - ./storage/web:/storage
+                        - ./storage/tmp/dcube/:/tmp
 
         db:
                 hostname: mysql
@@ -27,6 +28,9 @@ services:
                         - MYSQL_DATABASE=dcube
                         - MYSQL_USER=dcube
                         - MYSQL_PASSWORD=YzqmVQt9
+                ports:
+                        - 3306:3306/tcp
+                        - 33060:33060/tcp
 
         tsdb:
                 hostname: influx
@@ -44,14 +48,18 @@ services:
                 hostname: rabbitmq
                 restart: always 
                 container_name: rabbitmq
-                image: rabbitmq:management
+                # image: rabbitmq:management
+                image: rabbitmq:3-management
                 security_opt:
                         - seccomp:unconfined
                 ports:
-                        - 5672:5672
+                        - 5672:5672    # AMQP protocol port
+                        - 15672:15672  # HTTP management UI
+
                 environment:
                         - RABBITMQ_DEFAULT_USER=dcube
                         - RABBITMQ_DEFAULT_PASS=GWcq43x2
+
                 volumes:
                         - ./storage/rabbitmq:/var/lib/rabbitmq
 
@@ -66,5 +74,9 @@ services:
                 environment:
                         - GF_SECURITY_ADMIN_PASSWORD=NFN4DMxV
                         - GF_AUTH_ANONYMOUS_ENABLED=true
-                        - GF_USERS_DEFAULT_THEME=light
+                        - GF_USERS_DEFAULT_THEME=dark
                         - GF_SERVER_ROOT_URL=http://localhost/grafana/
+                        - GF_SERVER_SERVE_FROM_SUB_PATH=true
+
+                ports:
+                        - 0.0.0.0:3000:3000
