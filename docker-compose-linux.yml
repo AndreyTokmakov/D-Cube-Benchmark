@@ -10,7 +10,7 @@ services:
                 depends_on:
                         - broker
                 volumes:
-                        - ./storage/tmp/rpi80/:/tmp
+                        - ./storage/tmp/rpi_80/:/tmp
 
         rpi_81:
                 hostname: rpi81
@@ -22,7 +22,7 @@ services:
                 depends_on:
                         - broker
                 volumes:
-                        - ./storage/tmp/rpi80/:/tmp
+                        - ./storage/tmp/rpi_81/:/tmp
 
         web:
                 hostname: dcube-web
