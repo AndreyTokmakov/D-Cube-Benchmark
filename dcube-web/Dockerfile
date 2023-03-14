@@ -7,6 +7,8 @@ ADD ./init.d/dcube-scheduler /etc/init.d/dcube-scheduler
 ADD ./init.d/dcube-evaluation /etc/init.d/dcube-evaluation
 ADD ./configs/testbed.conf /etc/nginx/conf.d
 ADD ./configs/nginx.conf /etc/nginx/
+RUN touch /tmp/scheduler.log
+RUN chown www-data:www-data /tmp/scheduler.log
 WORKDIR /testbed
 RUN pip3 install -r app/requirements.txt
 EXPOSE 80
