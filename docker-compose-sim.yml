@@ -77,10 +77,8 @@ services:
                 security_opt:
                         - seccomp:unconfined
                 ports:
-                        # AMQP protocol port
-                        - 5672:5672
-                        # HTTP management UI
-                        - 15672:15672
+                        - 5672:5672    # AMQP protocol port
+                        - 15672:15672  # HTTP management UI
 
                 environment:
                         - RABBITMQ_DEFAULT_USER=dcube
@@ -100,5 +98,9 @@ services:
                 environment:
                         - GF_SECURITY_ADMIN_PASSWORD=NFN4DMxV
                         - GF_AUTH_ANONYMOUS_ENABLED=true
-                        - GF_USERS_DEFAULT_THEME=light
+                        - GF_USERS_DEFAULT_THEME=dark
                         - GF_SERVER_ROOT_URL=http://localhost/grafana/
+                        - GF_SERVER_SERVE_FROM_SUB_PATH=true
+
+                ports:
+                        - 0.0.0.0:80:3000

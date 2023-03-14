@@ -83,7 +83,22 @@ def init_logger() -> logging.Logger:
     return log
 
 
+def init_queue_logger() -> logging.Logger:
+    default_log_file_path: str = '/tmp/queue.log'
+    logging_format: str = "%(asctime)s %(name)16s [%(levelname)-8s] %(message)s"
+
+    file_handler: logging.Handler = logging.FileHandler(default_log_file_path)
+    file_handler.setLevel(logging.DEBUG)
+    file_handler.setFormatter(logging.Formatter(logging_format))
+
+    log: logging.Logger = logging.getLogger("Output")
+    log.addHandler(file_handler)
+
+    return log
+
+
 logger = init_logger()
+queue_log = init_queue_logger()
 
 
 def request_e2e_slot(job):
@@ -94,9 +109,7 @@ def request_e2e_slot(job):
         pub_keydata = f.read()
     public_key = crypto_serialization.load_pem_private_key(pub_keydata,
                                                            backend=crypto_default_backend(),
-                                                           password=None
-                                                           )
-
+                                                           password=None)
     message = json.dumps(request).encode("ascii")
     prehashed = hashlib.sha256(message).hexdigest().encode("ascii")
 
@@ -113,12 +126,10 @@ def request_e2e_slot(job):
 
 
 def send_panic_mail():
-    msg = EmailMessage(
-        current_app.config['SCHEDULER_EMAIL_SUBJECT'],
-        current_app.config['SCHEDULER_EMAIL_BODY'],
-        current_app.config['SCHEDULER_EMAIL_FROM'],
-        current_app.config['SCHEDULER_EMAIL_TO']
-    )
+    msg = EmailMessage(current_app.config['SCHEDULER_EMAIL_SUBJECT'],
+                       current_app.config['SCHEDULER_EMAIL_BODY'],
+                       current_app.config['SCHEDULER_EMAIL_FROM'],
+                       current_app.config['SCHEDULER_EMAIL_TO'])
     msg.send()
 
 
@@ -144,27 +155,27 @@ def next_job(with_jam=False, with_bs=False):
         has_next = False
 
         for benchmark_suite in benchmark_suites:
-            if current_benchmark_suite == None:
+            if current_benchmark_suite is None:
                 current_benchmark_suite = nc.id
                 break
             else:
                 if current_benchmark_suite == benchmark_suite.id:
                     armed = True
-                elif armed == True:
+                elif armed:
                     nc = benchmark_suite
                     has_next = True
                     armed = False
                     break
 
         # no benchmark_suites exist, nothing to do
-        if current_benchmark_suite == None:
+        if current_benchmark_suite is None:
             return None
 
         current_benchmark_suite = nc.id
 
         if not (armed == True):
             candidate_q = Job.query.filter_by(finished=False).filter_by(group_id=current_group)
-            if with_jam == False:
+            if not with_jam:
                 candidate_q = candidate_q.filter_by(jamming_composition_id=1)
             candidate = candidate_q.join(LayoutComposition).join(BenchmarkSuite).filter(
                 BenchmarkSuite.id == nc.id).order_by(Job.scheduled.asc()).first()
@@ -173,20 +184,20 @@ def next_job(with_jam=False, with_bs=False):
 
     armed = False
     for group in groups:
-        if current_group == None:
+        if current_group is None:
             current_group = ng.id
             break
         else:
             if current_group == group.id:
                 armed = True
-            elif armed == True:
+            elif armed:
                 ng = group
                 break
     current_group = ng.id
 
     job_q = Job.query.filter_by(finished=False).filter_by(group_id=current_group)
 
-    if False == with_jam:
+    if not with_jam:
         job_q = job_q.filter_by(jamming_composition_id=1)
 
     # job_q=job_q.order_by(Job.scheduled.asc(),BenchmarkSuite.id.asc(),Job.scheduled.asc())
@@ -203,7 +214,8 @@ def next_job(with_jam=False, with_bs=False):
 
 def enqueue_output(out, queue):
     for line in iter(out.readline, b''):
-        queue.put(line)
+        # queue.put(line)
+        queue_log.debug(line)
     out.close()
 
 
@@ -212,7 +224,8 @@ def check_kill():
     db.session.commit()
     panic = Config.query.filter_by(key="scheduler_stop").first()
     if panic and panic.value == "on":
-        return True
+        logger.debug("* * * * * check_kill --> True * * * * * *")
+        return False
     return False
 
 
@@ -287,7 +300,7 @@ def check_jamming():
 def check_holiday():
     h = holidays.Austria(prov='ST')
     h.append(["2020-12-24", "2020-12-31"])
-    if (datetime.today() in h):
+    if datetime.today() in h:
         return True
     else:
         return False
@@ -318,7 +331,7 @@ class Scheduler:
 
     def run(self):
 
-        while (True):
+        while True:
             try:
                 db.session.commit()
                 next = next_job(check_jamming())
