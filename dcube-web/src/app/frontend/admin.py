@@ -97,6 +97,7 @@ def setup_defaults():
     admins = user_datastore.find_or_create_role(name="admins")
     users = user_datastore.find_or_create_role(name="users")
     nordic = user_datastore.find_or_create_role(name="nordic")
+    linux = user_datastore.find_or_create_role(name="linux")
     db.session.commit()
 
     # If there are no more users create one admin user just in case
@@ -105,14 +106,17 @@ def setup_defaults():
         admin = user_datastore.create_user(username="admin", email='admin@admin.net', password=hash_password('admin'))
         tester = user_datastore.create_user(username="tester", email='test@test.com', password=hash_password('12345'))
 
+        builtin_group = Group("builtin")
+        db.session.add(builtin_group)
+        db.session.commit()
+
         user_datastore.add_role_to_user(admin, admins)
         user_datastore.add_role_to_user(admin, users)
-        user_datastore.add_role_to_user(tester, nordic)
+        admin.group = builtin_group
 
-        group = Group("builtin")
-        db.session.add(group)
-        db.session.commit()
-        admin.group = group
+        user_datastore.add_role_to_user(tester, nordic)
+        user_datastore.add_role_to_user(tester, linux)
+        tester.group = builtin_group
 
     db.session.commit()
 
