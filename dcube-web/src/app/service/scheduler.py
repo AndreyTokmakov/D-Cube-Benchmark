@@ -399,7 +399,7 @@ class Scheduler:
                         if next.temp_profile:
                             switch_config = current_app.config['TEMPLAB_SWITCH_CONFIG']
                         elif next.protocol.benchmark_suite.id == 5:
-                            switch_config = "switch_federated.json"
+                            switch_config = "switch.json"
                         else:
                             switch_config = current_app.config['SWITCH_CONFIG']
                         # current_task=Popen(['/usr/bin/python3',"/testbed/pydcube/rpc_testbed.py", "--job_id", str(next.id),"--topology", "switch.json"], stderr=PIPE, stdin=PIPE, stdout=PIPE,cwd="/testbed/pydcube")
