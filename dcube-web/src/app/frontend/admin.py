@@ -96,19 +96,27 @@ def setup_defaults():
     # We best ensure that nobody deleted the builtin roles
     admins = user_datastore.find_or_create_role(name="admins")
     users = user_datastore.find_or_create_role(name="users")
+    nordic = user_datastore.find_or_create_role(name="nordic")
+    linux = user_datastore.find_or_create_role(name="linux")
     db.session.commit()
 
     # If there are no more users create one admin user just in case
     anyone = User.query.first()
     if anyone is None:
-        admin = user_datastore.create_user(
-            username="admin", email='admin@admin.net', password=hash_password('admin'))
+        admin = user_datastore.create_user(username="admin", email='admin@admin.net', password=hash_password('admin'))
+        tester = user_datastore.create_user(username="tester", email='test@test.com', password=hash_password('12345'))
+
+        builtin_group = Group("builtin")
+        db.session.add(builtin_group)
+        db.session.commit()
+
         user_datastore.add_role_to_user(admin, admins)
         user_datastore.add_role_to_user(admin, users)
-        group = Group("builtin")
-        db.session.add(group)
-        db.session.commit()
-        admin.group = group
+        admin.group = builtin_group
+
+        user_datastore.add_role_to_user(tester, nordic)
+        user_datastore.add_role_to_user(tester, linux)
+        tester.group = builtin_group
 
     db.session.commit()
 
@@ -131,18 +139,18 @@ def setup_defaults():
     ]
 
     for default in defaults:
-        if configs.filter_by(key=default.key).first() == None:
+        if configs.filter_by(key=default.key).first() is None:
             db.session.add(default)
     db.session.commit()
 
-    if JammingComposition.query.first() == None:
+    if JammingComposition.query.first() is None:
         jamming_lvl0 = JammingComposition("None", 0, True)
         jamming_none = JammingScenario.query.filter_by(name="None").first()
-        if jamming_none == None:
+        if jamming_none is None:
             jamming_none = JammingScenario("None")
             db.session.add(jamming_none)
         jamming_config_none = JammingConfig.query.filter_by(name="Off").first()
-        if jamming_config_none == None:
+        if jamming_config_none is None:
             jamming_config_none = JammingConfig("Off", 7, 0, 13, 1000)
             db.session.add(jamming_config_none)
         db.session.add(jamming_lvl0)
@@ -157,7 +165,7 @@ def setup_defaults():
         db.session.add(jamming_pi_default)
         db.session.commit()
 
-    if Node.query.first() == None:
+    if Node.query.first() is None:
         sky = Node("Sky-All")
         nordic = Node("Nordic-All")
         linux_node = Node("Linux-All")
@@ -166,14 +174,14 @@ def setup_defaults():
         db.session.add(linux_node)
         db.session.commit()
 
-    if BenchmarkSuite.query.first() == None:
+    if BenchmarkSuite.query.first() is None:
 
         sky = Node.query.filter_by(name="Sky-All").first()
         nordic = Node.query.filter_by(name="Nordic-All").first()
         linux_node = Node.query.filter_by(name="Linux-All").first()
 
         suites = []
-        if not sky == None:
+        if sky:
             skydc = BenchmarkSuite("Tmote Sky Data Collection v1", "SkyDC_1")
             skydd = BenchmarkSuite("Tmote Sky Dissemination v1", "SkyDD_1")
             skydc.node_id = sky.id
@@ -191,14 +199,14 @@ def setup_defaults():
             nrfdd.latency = False
             nrfdd.node_id = nordic.id
 
-            nrfdd = BenchmarkSuite("nRF52840 Timely Dissemination v1", "nRFDTest")
-            nrfdd.latency = False
-            nrfdd.node_id = nordic.id
+            nrftst = BenchmarkSuite("nRF52840 Local Experiments and tests", "nRFTest")
+            nrftst.latency = False
+            nrftst.node_id = nordic.id
 
-            suites.append(nrfdc)
-            suites.append(nrfdd)
+            suites.extend([nrfdc, nrfdd, nrftst])
             db.session.add(nrfdc)
             db.session.add(nrfdd)
+            db.session.add(nrftst)
 
         if linux_node:
             linux = BenchmarkSuite("Linux iperf3 v1", "iperf_1")
@@ -256,7 +264,7 @@ def setup_defaults():
         nrfdc = BenchmarkSuite.query.filter_by(name="nRF52840 Timely Data Collection v1").first()
         nrfdd = BenchmarkSuite.query.filter_by(name="nRF52840 Timely Dissemination v1").first()
         linux = BenchmarkSuite.query.filter_by(name="Linux iperf3 v1").first()
-        testp = BenchmarkSuite.query.filter_by(name="Local Experiments Test Suite").first()
+        nrftst = BenchmarkSuite.query.filter_by(name="nRF52840 Local Experiments and tests").first()
 
         if skydc:
             pskydc = Protocol("Administrative Experiment TelosB Sky DC", "https://iti-testbed.tugraz.at/",
@@ -274,13 +282,14 @@ def setup_defaults():
             pnrfdd = Protocol("Administrative Experiment nRF DD", "https://iti-testbed.tugraz.at/", "Maintenance Jobs",
                               admins.id, nrfdd.id)
             db.session.add(pnrfdd)
+        if nrftst:
+            pnrfdd = Protocol("Administrative Local Experiments", "https://google.com", "Maintenance Jobs",
+                              admins.id, nrftst.id)
+            db.session.add(pnrfdd)
         if linux:
             plinux = Protocol("Administrative Experiment Linux iperf3", "https://iti-testbed.tugraz.at/",
                               "Maintenance Jobs", admins.id, linux.id)
             db.session.add(plinux)
-
-
-        # iperf_1
 
     db.session.commit()
 
@@ -295,8 +304,7 @@ def admin_statistics():
     benchmark_suite = (request.args.get('benchmark_suite'))
     benchmark_suite = BenchmarkSuite.query.filter_by(short=benchmark_suite).first()
     for group in groups:
-        g = {}
-        g['name'] = group.name
+        g = {'name': group.name}
         if benchmark_suite == None:
             jobs = Job.query.filter_by(group=group)
         else:
@@ -309,7 +317,7 @@ def admin_statistics():
             if j.finished and not j.failed:
                 t = t + j.duration
         g['total_seconds'] = t
-        if (not g['name'] == "00"):
+        if not g['name'] == "00":
             total_usage += t
         g['total_time'] = display_time(t)
         filtered_groups = filtered_groups + [g, ]
