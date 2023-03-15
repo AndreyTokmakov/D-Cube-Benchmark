@@ -132,8 +132,8 @@ for switch in topology:
 BROKER = args.broker
 
 # clients
-# TODO use credentials file!
-dcube = DCM.Client(BROKER, "master", "dcube", "GWcq43x2", servers=SERVERS)
+# TODO use credentials file! RabbitMQ password
+dcube = DCM.Client(BROKER, "master", "dcube", "12345", servers=SERVERS)
 rest = DCM.RESTClient("http://dcube-web")
 
 # print startup banner

@@ -23,6 +23,7 @@
 #
 import bleach
 
+
 class Config(object):
     def uia_username_mapper(identity):
         # we allow pretty much anything - but we bleach it.
@@ -30,38 +31,38 @@ class Config(object):
 
     TEMPLATES_AUTO_RELOAD = True
     SECRET_KEY = 'dcube'.encode('utf8')
-    
+
     DATABASE_URI = 'sqlite:///:memory:'
     SQLALCHEMY_TRACK_MODIFICATIONS = False
-    
+
     # Because we're security-conscious developers, we also hard-code disabling
     # the CDN support (this might become a default in later versions):
     BOOTSTRAP_SERVE_LOCAL = True
-    
+
     UPLOAD_FOLDER = '/storage/firmwares'
-    ALLOWED_EXTENSIONS = set(['ihex','hex'])
-    
+    ALLOWED_EXTENSIONS = set(['ihex', 'hex'])
+
     GRAFANA_URL = "/grafana"
     GRAFANA_DASHBOARD_FOLDER = "?folderIds=1"
-    
+
     LOGFILE_FOLDER = '/storage/logfiles/'
     EVALUATION_FOLDER = '/storage/evaluations/'
     PATCH_FOLDER = '/storage/patches/'
     TEMPLAB_FOLDER = '/storage/temperature_profiles/'
-    
+
     # Flask-Mailman setup
     MAIL_SERVER = 'mail.testbed.local'
     MAIL_PORT = 465
     MAIL_USE_SSL = True
-    #MAIL_PORT = 587
-    #MAIL_USE_TLS = True
-    #MAIL_USERNAME = 'username'
-    #MAIL_PASSWORD = 'password'
+    # MAIL_PORT = 587
+    # MAIL_USE_TLS = True
+    # MAIL_USERNAME = 'username'
+    # MAIL_PASSWORD = 'password'
 
     SCHEDULER_EMAIL_SUBJECT = "Testbed failure"
     SCHEDULER_EMAIL_BODY = "The testbed has failed and ended execution of experiments to prevent further damage."
     SCHEDULER_EMAIL_FROM = 'Testbed <noreply@testbed.local>'
-    SCHEDULER_EMAIL_TO = [SCHEDULER_EMAIL_FROM,]
+    SCHEDULER_EMAIL_TO = [SCHEDULER_EMAIL_FROM, ]
 
     # Flask-Security setup
     SECURITY_EMAIL_SENDER = SCHEDULER_EMAIL_FROM
@@ -70,22 +71,22 @@ class Config(object):
     SECURITY_RECOVERABLE = False
     SECURITY_CHANGEABLE = True
     SECURITY_USERNAME_ENABLE = True
-    SECURITY_SEND_PASSWORD_CHANGE_EMAIL	= False
+    SECURITY_SEND_PASSWORD_CHANGE_EMAIL = False
     SECURITY_URL_PREFIX = '/auth'
     SECURITY_POST_LOGIN_VIEW = 'frontend.index'
     SECURITY_POST_LOGOUT_VIEW = 'frontend.index'
     SECURITY_UNAUTHORIZED_VIEW = 'frontend.index'
     SECURITY_PASSWORD_HASH = 'pbkdf2_sha512'
-    
+
     # import uuid; salt = uuid.uuid4().hex
     SECURITY_PASSWORD_SALT = '5d99d5d942024a86bf15427a3a1685e9'
-    SECURITY_USER_IDENTITY_ATTRIBUTES = [{'username':{"mapper":uia_username_mapper}}]
+    SECURITY_USER_IDENTITY_ATTRIBUTES = [{'username': {"mapper": uia_username_mapper}}]
 
     # Configure 2FA
-    SECURITY_TWO_FACTOR_ENABLED_METHODS = ['authenticator','email']  # 'sms' also valid but requires an sms provider
+    SECURITY_TWO_FACTOR_ENABLED_METHODS = ['authenticator', 'email']  # 'sms' also valid but requires an sms provider
     SECURITY_TWO_FACTOR = True
     SECURITY_TWO_FACTOR_REQUIRED = False
-    #SECURITY_TWO_FACTOR_RESCUE_EMAIL = False
+    # SECURITY_TWO_FACTOR_RESCUE_EMAIL = False
     SECURITY_TWO_FACTOR_RESCUE_MAIL = "noreply@testbed.local"
     SECURITY_TWO_FACTOR_ALWAYS_VALIDATE = True
     SECURITY_TWO_FACTOR_LOGIN_VALIDITY = "1 week"
@@ -94,7 +95,7 @@ class Config(object):
     SECURITY_TOTP_SECRETS = {"1": "TjQ9Qa31VOrfEzuPy4VHQWPCTmRzCnFzMKLxXYiZu9B"}
     SECURITY_TOTP_ISSUER = "D-Cube Testbed Docker Edition"
 
-    PYTHON_PATH = "/usr/bin/python3" 
+    PYTHON_PATH = "/usr/bin/python3"
     DCM_PATH = "/testbed/pydcube"
     DCM_BINARY = "/testbed/pydcube/rpc_testbed.py"
     DCM_BROKER = "rabbitmq"
@@ -108,5 +109,6 @@ class Config(object):
 
     LANDING_PAGE = "/overview"
 
+
 class DockerConfig(Config):
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://dcube:YzqmVQt9@mysql/dcube'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://dcube:12345@mysql/dcube'

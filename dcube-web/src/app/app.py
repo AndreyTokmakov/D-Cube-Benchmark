@@ -21,9 +21,9 @@
 # OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 # SOFTWARE.
 #
-from flask import Flask,redirect
+from flask import Flask, redirect
 from flask_bootstrap import Bootstrap4
-from flask_security import Security, current_user, uia_username_mapper 
+from flask_security import Security, current_user, uia_username_mapper
 from flask_migrate import Migrate
 from flask_mailman import Mail
 
@@ -49,21 +49,23 @@ import os
 
 import logging
 import sys
-level=logging.DEBUG
+
+level = logging.DEBUG
 FORMAT = "[%(name)16s - %(funcName)12s() ] %(message)s"
-logging.basicConfig(stream=sys.stdout,level=level,format=FORMAT)
+logging.basicConfig(stream=sys.stdout, level=level, format=FORMAT)
+
 
 def create_app(configfile=None):
     app = Flask("dcube")
 
     # Select a configuration from object
-    #app.config.from_object('backend.configmodule.DockerConfig')
+    # app.config.from_object('backend.configmodule.DockerConfig')
     load_dotenv()
     config = os.getenv('DCUBE_CONFIG')
-    if config==None:
-        backendconfig="backend.configmodule.DockerConfig"
+    if config == None:
+        backendconfig = "backend.configmodule.DockerConfig"
     else:
-        backendconfig="backend.configmodule.%s"%config
+        backendconfig = "backend.configmodule.%s" % config
     app.config.from_object(backendconfig)
 
     # Register app with database backend
@@ -95,7 +97,7 @@ def create_app(configfile=None):
     # We initialize the security context
     Security(app, user_datastore, login_form=ExtendedLoginForm)
 
-    migrate=Migrate(app,db)
+    migrate = Migrate(app, db)
 
     # Create a user to test with
     @app.before_first_request
@@ -126,10 +128,8 @@ def create_app(configfile=None):
 
     app.jinja_env.globals.update(protocolqueue=protocolqueue)
 
-
     import math
     app.jinja_env.filters['isnan'] = math.isnan
-
 
     # Convert time to the given format
     import pytz
@@ -149,7 +149,7 @@ def create_app(configfile=None):
 
     def timestampfilter(value):
         timestamp = calendar.timegm(value.utctimetuple())
-        return timestamp*1000
+        return timestamp * 1000
 
     app.jinja_env.filters['timestampfilter'] = timestampfilter
 
@@ -173,33 +173,29 @@ def create_app(configfile=None):
     app.add_template_global(check_maintenance_mode,
                             name='check_maintenance_mode')
 
-
     def check_scheduler_running():
         return check_scheduler_time()
-    
+
     app.add_template_global(check_scheduler_running,
                             name='check_scheduler_running')
 
-
     def check_jamming_running():
-        return  check_jamming_time()
+        return check_jamming_time()
 
     app.add_template_global(check_jamming_running,
                             name='check_jamming_running')
 
-
-    def get_config(key,default="?"):
-        return  Config.get_string(key)
+    def get_config(key, default="?"):
+        return Config.get_string(key)
 
     app.add_template_global(get_config,
                             name='get_config')
 
-    def get_config_bool(key,default=False):
-        return  Config.get_bool(key)
+    def get_config_bool(key, default=False):
+        return Config.get_bool(key)
 
     app.add_template_global(get_config_bool,
                             name='get_config_bool')
-
 
     def get_benchmark_suites():
         return BenchmarkSuite.query.all()

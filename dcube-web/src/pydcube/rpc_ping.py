@@ -40,7 +40,8 @@ def init_logger() -> logging.Logger:
 logger = init_logger()
 
 # clients
-dcube = DCM.Client("broker", "master", "dcube", "GWcq43x2", servers=SERVERS)
+# TODO use credentials file! RabbitMQ password
+dcube = DCM.Client("broker", "master", "dcube", "12345", servers=SERVERS)
 
 # ping all servers
 logger.info("Checking if all %d Raspberry Pi nodes are pingable..." % len(SERVERS))
