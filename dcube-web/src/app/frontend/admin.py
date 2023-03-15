@@ -266,7 +266,7 @@ def setup_defaults():
             pskydd = Protocol("Administrative Experiment TelosB Sky DD", "https://iti-testbed.tugraz.at/",
                               "Maintenance Jobs", admins.id, skydd.id)
             db.session.add(pskydd)
-        if nrfdc
+        if nrfdc:
             pnrfdc = Protocol("Administrative Experiment nRF DC", "https://iti-testbed.tugraz.at/", "Maintenance Jobs",
                               admins.id, nrfdc.id)
             db.session.add(pnrfdc)
