@@ -133,7 +133,7 @@ BROKER = args.broker
 
 # clients
 # TODO use credentials file! RabbitMQ password
-dcube = DCM.Client(BROKER, "master", "dcube", "12345", servers=SERVERS)
+dcube = DCM.Client(BROKER, "master", "dcube", "GWcq43x2", servers=SERVERS)
 rest = DCM.RESTClient("http://dcube-web")
 
 # print startup banner

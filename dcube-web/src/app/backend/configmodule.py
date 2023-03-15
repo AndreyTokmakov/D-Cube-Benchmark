@@ -111,4 +111,4 @@ class Config(object):
 
 
 class DockerConfig(Config):
-    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://dcube:12345@mysql/dcube'
+    SQLALCHEMY_DATABASE_URI = 'mysql+pymysql://dcube:YzqmVQt9@mysql/dcube'

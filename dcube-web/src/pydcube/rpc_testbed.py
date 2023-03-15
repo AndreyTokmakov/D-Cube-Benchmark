@@ -151,7 +151,7 @@ BROKER = args.broker
 # clients
 poe = PoEClient(topology)
 # TODO use credentials file! RabbitMQ password
-dcube = DCM.Client(BROKER, "master", "dcube", "12345", servers=SERVERS)
+dcube = DCM.Client(BROKER, "master", "dcube", "GWcq43x2", servers=SERVERS)
 rest = DCM.RESTClient("http://dcube-web")
 
 # print startup banner
@@ -170,7 +170,7 @@ signal.signal(signal.SIGTERM, signal_handler)
 
 if job["templab"]:
     # TODO use credentials file! RabbitMQ password
-    templab = Templab(BROKER, "dcube", "12345", templab_nodes)
+    templab = Templab(BROKER, "dcube", "GWcq43x2", templab_nodes)
     temp_profile = rest.get_temp_profile(job["id"])
     templab.prepare(StringIO(temp_profile["csv"].decode()))
 
