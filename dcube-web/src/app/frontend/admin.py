@@ -96,8 +96,6 @@ def setup_defaults():
     # We best ensure that nobody deleted the builtin roles
     admins = user_datastore.find_or_create_role(name="admins")
     users = user_datastore.find_or_create_role(name="users")
-    nordic = user_datastore.find_or_create_role(name="nordic")
-    linux = user_datastore.find_or_create_role(name="linux")
     db.session.commit()
 
     # If there are no more users create one admin user just in case
@@ -106,17 +104,15 @@ def setup_defaults():
         admin = user_datastore.create_user(username="admin", email='admin@admin.net', password=hash_password('admin'))
         tester = user_datastore.create_user(username="tester", email='test@test.com', password=hash_password('12345'))
 
-        builtin_group = Group("builtin")
-        db.session.add(builtin_group)
+        group = Group("builtin")
+        db.session.add(group)
         db.session.commit()
 
         user_datastore.add_role_to_user(admin, admins)
         user_datastore.add_role_to_user(admin, users)
-        admin.group = builtin_group
 
-        user_datastore.add_role_to_user(tester, nordic)
-        user_datastore.add_role_to_user(tester, linux)
-        tester.group = builtin_group
+        admin.group = group
+        tester.group = group
 
     db.session.commit()
 
@@ -181,7 +177,7 @@ def setup_defaults():
         linux_node = Node.query.filter_by(name="Linux-All").first()
 
         suites = []
-        if not sky == None:
+        if sky:
             skydc = BenchmarkSuite("Tmote Sky Data Collection v1", "SkyDC_1")
             skydd = BenchmarkSuite("Tmote Sky Dissemination v1", "SkyDD_1")
             skydc.node_id = sky.id
@@ -190,6 +186,7 @@ def setup_defaults():
             suites.append(skydd)
             db.session.add(skydc)
             db.session.add(skydd)
+
         if nordic:
             nrfdc = BenchmarkSuite("nRF52840 Timely Data Collection v1", "nRFDC_1")
             nrfdc.latency = False
@@ -199,14 +196,13 @@ def setup_defaults():
             nrfdd.latency = False
             nrfdd.node_id = nordic.id
 
-            nrftst = BenchmarkSuite("nRF52840 Local Experiments and tests", "nRFTest")
-            nrftst.latency = False
-            nrftst.node_id = nordic.id
+            nrfdd = BenchmarkSuite("nRF52840 Timely Dissemination v1", "nRFDTest")
+            nrfdd.latency = False
+            nrfdd.node_id = nordic.id
 
-            suites.extend([nrfdc, nrfdd, nrftst])
+            suites.extend([nrfdc,nrfdd])
             db.session.add(nrfdc)
             db.session.add(nrfdd)
-            db.session.add(nrftst)
 
         if linux_node:
             linux = BenchmarkSuite("Linux iperf3 v1", "iperf_1")
@@ -264,7 +260,7 @@ def setup_defaults():
         nrfdc = BenchmarkSuite.query.filter_by(name="nRF52840 Timely Data Collection v1").first()
         nrfdd = BenchmarkSuite.query.filter_by(name="nRF52840 Timely Dissemination v1").first()
         linux = BenchmarkSuite.query.filter_by(name="Linux iperf3 v1").first()
-        nrftst = BenchmarkSuite.query.filter_by(name="nRF52840 Local Experiments and tests").first()
+        testp = BenchmarkSuite.query.filter_by(name="Local Experiments Test Suite").first()
 
         if skydc:
             pskydc = Protocol("Administrative Experiment TelosB Sky DC", "https://iti-testbed.tugraz.at/",
@@ -274,7 +270,7 @@ def setup_defaults():
             pskydd = Protocol("Administrative Experiment TelosB Sky DD", "https://iti-testbed.tugraz.at/",
                               "Maintenance Jobs", admins.id, skydd.id)
             db.session.add(pskydd)
-        if nrfdc:
+        if nrfdc
             pnrfdc = Protocol("Administrative Experiment nRF DC", "https://iti-testbed.tugraz.at/", "Maintenance Jobs",
                               admins.id, nrfdc.id)
             db.session.add(pnrfdc)
@@ -282,14 +278,13 @@ def setup_defaults():
             pnrfdd = Protocol("Administrative Experiment nRF DD", "https://iti-testbed.tugraz.at/", "Maintenance Jobs",
                               admins.id, nrfdd.id)
             db.session.add(pnrfdd)
-        if nrftst:
-            pnrfdd = Protocol("Administrative Local Experiments", "https://google.com", "Maintenance Jobs",
-                              admins.id, nrftst.id)
-            db.session.add(pnrfdd)
         if linux:
             plinux = Protocol("Administrative Experiment Linux iperf3", "https://iti-testbed.tugraz.at/",
                               "Maintenance Jobs", admins.id, linux.id)
             db.session.add(plinux)
+
+
+        # iperf_1
 
     db.session.commit()
 
