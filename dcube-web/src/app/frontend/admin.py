@@ -101,18 +101,14 @@ def setup_defaults():
     # If there are no more users create one admin user just in case
     anyone = User.query.first()
     if anyone is None:
-        admin = user_datastore.create_user(username="admin", email='admin@admin.net', password=hash_password('admin'))
-        tester = user_datastore.create_user(username="tester", email='test@test.com', password=hash_password('12345'))
-
+        admin = user_datastore.create_user(
+            username="admin", email='admin@admin.net', password=hash_password('admin'))
+        user_datastore.add_role_to_user(admin, admins)
+        user_datastore.add_role_to_user(admin, users)
         group = Group("builtin")
         db.session.add(group)
         db.session.commit()
-
-        user_datastore.add_role_to_user(admin, admins)
-        user_datastore.add_role_to_user(admin, users)
-
         admin.group = group
-        tester.group = group
 
     db.session.commit()
 
@@ -177,7 +173,7 @@ def setup_defaults():
         linux_node = Node.query.filter_by(name="Linux-All").first()
 
         suites = []
-        if sky:
+        if not sky == None:
             skydc = BenchmarkSuite("Tmote Sky Data Collection v1", "SkyDC_1")
             skydd = BenchmarkSuite("Tmote Sky Dissemination v1", "SkyDD_1")
             skydc.node_id = sky.id
@@ -186,7 +182,6 @@ def setup_defaults():
             suites.append(skydd)
             db.session.add(skydc)
             db.session.add(skydd)
-
         if nordic:
             nrfdc = BenchmarkSuite("nRF52840 Timely Data Collection v1", "nRFDC_1")
             nrfdc.latency = False
@@ -200,7 +195,8 @@ def setup_defaults():
             nrfdd.latency = False
             nrfdd.node_id = nordic.id
 
-            suites.extend([nrfdc,nrfdd])
+            suites.append(nrfdc)
+            suites.append(nrfdd)
             db.session.add(nrfdc)
             db.session.add(nrfdd)
 
