@@ -1,5 +1,5 @@
 FROM nginx
-RUN apt-get update && apt-get install -qy pkg-config libfreetype6-dev libjpeg-dev libpng-dev libffi-dev build-essential procps python3 python3-pip uwsgi uwsgi-plugin-python3 curl inetutils-ping curl inetutils-ping zip libcairo2 libpango1.0-0 &&  rm -rf /var/lib/apt/lists/* && rm /etc/nginx/conf.d/default.conf && rm /etc/nginx/nginx.conf && mkdir /storage && chown -R www-data:www-data /storage
+RUN apt-get update && apt-get install -qy pkg-config libfreetype6-dev libjpeg-dev libpng-dev libffi-dev build-essential procps python3 python3-pip uwsgi uwsgi-plugin-python3 curl inetutils-ping curl inetutils-ping nano tcpdump zip libcairo2 libpango1.0-0 &&  rm -rf /var/lib/apt/lists/* && rm /etc/nginx/conf.d/default.conf && rm /etc/nginx/nginx.conf && mkdir /storage && chown -R www-data:www-data /storage
 ADD --chown=www-data:www-data ./src/ /testbed
 VOLUME /storage
 ADD ./configs/testbed.ini /etc/uwsgi/apps-enabled
