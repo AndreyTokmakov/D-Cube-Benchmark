@@ -83,5 +83,6 @@ else:
         logger.error("Node JSON file does not exist or cannot be opened!")
         exit(-1)
 
-dcube = Raspberry("192.168.100.19", args.hostname, user_name, user_pass, nodes)
+# TODO: Move 192.168.101.3 (aka DCube server host addr) to some Constants / Configuration
+dcube = Raspberry("192.168.101.3", args.hostname, user_name, user_pass, nodes)
 dcube.run()

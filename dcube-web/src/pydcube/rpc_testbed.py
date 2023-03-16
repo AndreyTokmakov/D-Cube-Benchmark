@@ -40,11 +40,9 @@ def init_logger() -> logging.Logger:
     default_log_file_path: str = '/tmp/trace.log'
     logging_format: str = "%(asctime)s %(name)16s [%(levelname)-8s] %(message)s"
 
-    logging.basicConfig(level=logging.DEBUG,
-                        format=logging_format)
-
-    logging.getLogger("pika").setLevel(logging.DEBUG)
-    logging.getLogger("urllib3").setLevel(logging.DEBUG)
+    logging.basicConfig(level=logging.DEBUG, format=logging_format)
+    logging.getLogger("pika").setLevel(logging.WARNING)
+    logging.getLogger("urllib3").setLevel(logging.WARNING)
 
     file_handler: logging.Handler = logging.FileHandler(default_log_file_path)
     file_handler.setLevel(logging.DEBUG)

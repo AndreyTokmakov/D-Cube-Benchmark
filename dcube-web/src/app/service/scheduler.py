@@ -69,9 +69,8 @@ def init_logger() -> logging.Logger:
     default_log_file_path: str = '/tmp/scheduler.log'
     logging_format: str = "%(asctime)s %(name)16s [%(levelname)-8s] %(message)s"
 
-    logging.basicConfig(level=logging.DEBUG,
-                        format=logging_format)
-    logging.getLogger("pika").setLevel(logging.DEBUG)
+    logging.basicConfig(level=logging.WARNING, format=logging_format)
+    logging.getLogger("pika").setLevel(logging.WARNING)
 
     file_handler: logging.Handler = logging.FileHandler(default_log_file_path)
     file_handler.setLevel(logging.DEBUG)
